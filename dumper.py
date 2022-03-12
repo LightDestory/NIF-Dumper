@@ -1,16 +1,15 @@
 import re
 import shutil
 import os
-import sys
-from typing import Union
-
 import requests
+from typing import Union
 from InquirerPy.base import Choice
 from InquirerPy.validator import EmptyInputValidator
-
 from bs4 import BeautifulSoup
 from InquirerPy import inquirer
+from colorama import init
 from requests import Response
+from termcolor import colored
 
 NIF_SCRAPE_TEMPLATE: str = "https://nifteam.info/Multimedia/?Anime=%key%"
 NIF_DL_TEMPLATE: str = "https://download.nifteam.info/Download/Anime/%episode%"
@@ -22,7 +21,7 @@ SERIES_EPISODES_REGEX: str = r"//nifteam.info/link.php\?file=.+"
 def make_soup(url: str) -> BeautifulSoup:
     page_src: Response = requests.get(url)
     if page_src.status_code != 200:
-        print("NIF's website is not reachable at the moment!", file=sys.stderr)
+        print(colored("NIF website is not reachable at the moment!", "red"))
         exit(-1)
     return BeautifulSoup(page_src.text, "html.parser")
 
@@ -72,34 +71,46 @@ def ask_fuzzy(title: str, data: [str], episode_listing: bool = False) -> str:
     ).execute()
 
 
+def ask_integer_parameter(title: str, min_value: int, max_value: int, default: int = 1) -> int:
+    return inquirer.number(
+        message=title,
+        min_allowed=min_value,
+        max_allowed=max_value,
+        validate=EmptyInputValidator(),
+        default=default
+    ).execute()
+
+
 def download(anime: str, download_action: str, episodes: dict[str, str]) -> None:
+    parallel_downloads: int = 1
     current_path: str = "./"
-    subdir_needed: bool = inquirer.confirm(message=f'Create "{anime}" subfolder?', default=False).execute()
+    subdir_needed: bool = True if os.path.isdir(anime) else inquirer.confirm(message=f'Create "{anime}" subfolder?',
+                                                                             default=False).execute()
     if subdir_needed:
         try:
             os.makedirs(f'{current_path}{anime}', exist_ok=True)
             current_path = f'{current_path}{anime}'
         except OSError:
-            print("Unable to create subfolder!", file=sys.stderr)
+            print(colored("Unable to create subfolder!", "red"))
     if download_action != "dumper_download_all":
-        url: str = NIF_DL_TEMPLATE.replace("%episode%", episodes[download_action])
-        os.system(f"aria2c -d {current_path} -x 15 -s 15 \"{url}\"")
+        url: str = f'\"{NIF_DL_TEMPLATE.replace("%episode%", episodes[download_action])}\"'
     else:
         offset: int = 1
         limit: int = len(episodes.values())
         offset_needed: bool = inquirer.confirm(message="Do you want to set a offset?", default=False).execute()
         if offset_needed:
-            offset = inquirer.number(
-                message="What episode should I start with?:",
-                min_allowed=1,
-                max_allowed=limit,
-                validate=EmptyInputValidator(),
-                default=1
-            ).execute()
+            offset = ask_integer_parameter("What episode should I start with?:", 1, limit)
+        more_parallel: bool = inquirer.confirm(message="Do you want to download more than 1 episode at once?",
+                                               default=False).execute()
+        if more_parallel:
+            parallel_downloads = ask_integer_parameter("How many parallel downloads do you want? (max 5):", 1, 5)
         ep_list: [str] = list(episodes.keys())
+        url = ""
         for i in range(int(offset) - 1, limit):
-            url: str = NIF_DL_TEMPLATE.replace("%episode%", episodes[ep_list[i]])
-            os.system(f"aria2c -d {current_path} -x 15 -s 15 \"{url}\"")
+            url: str = f'{url}\"{NIF_DL_TEMPLATE.replace("%episode%", episodes[ep_list[i]])}\" '
+    print(colored("\nRunning aria2, to interrupt download press CTRL+C...", "yellow"))
+    os.system(f'aria2c -d {current_path} -j {parallel_downloads} --download-result=hide --summary-interval=0 -x 15 -s '
+              f'15 -Z {url}')
 
 
 def runtime(series_list: [dict[str, str]]):
@@ -119,10 +130,10 @@ def runtime(series_list: [dict[str, str]]):
             elif selected_series == "dumper_goback":
                 continue
             else:
-                print("Fetching episodes...")
+                print(colored("Fetching episodes...", "yellow"))
                 anime_path: str = series_list[series_type][selected_series]
                 episode_soup: BeautifulSoup = make_soup(NIF_SCRAPE_TEMPLATE.replace("%key%", anime_path))
-                print("Fetch completed")
+                print(colored("Fetch completed", "green"))
                 episodes: dict[str, str] = get_series_episodes(episode_soup)
                 download_action: str = ask_fuzzy("Select download item:", list(episodes.keys()), episode_listing=True)
                 if download_action == "dumper_exit":
@@ -130,7 +141,7 @@ def runtime(series_list: [dict[str, str]]):
                 elif download_action == "dumper_goback":
                     continue
                 download(anime_path, download_action, episodes)
-                print("Download completed")
+                print(colored("Download completed", "green"))
                 exit_confirm = ask_selection("Do you want to dump another anime?:", [
                     Choice(value=0, name="Yes"),
                     Choice(value=1, name="No")
@@ -138,19 +149,21 @@ def runtime(series_list: [dict[str, str]]):
                 if exit_confirm:
                     break
     except KeyboardInterrupt:
-        print("Runtime aborted by KeyboardInterrupt", file=sys.stderr)
+        print(colored("\nRuntime aborted by KeyboardInterrupt", "red"))
         exit(-1)
 
 
 def main() -> None:
+    # colorama init
+    init()
     if not shutil.which("aria2c"):
-        print("aria2 is required to run the dumper!\nInstall it and put it in the PATH!", file=sys.stderr)
+        print(colored("aria2 is required to run the dumper!\nInstall it and put it in the PATH!", "red"))
         exit(-1)
-    print("Fetching NIF releases...")
+    print(colored("Fetching NIF releases...", "yellow"))
     soup: BeautifulSoup = make_soup(NIF_SCRAPE_TEMPLATE.replace("%key%", NIF_HOME_KEY))
-    print("Fetch completed!")
+    print(colored("Fetch completed!", "green"))
     runtime(get_series(soup))
-    print("Thanks you, goodbye!")
+    print(colored("Thanks you, goodbye!", "cyan"))
 
 
 if __name__ == '__main__':
