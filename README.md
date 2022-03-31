@@ -1,6 +1,6 @@
 # NIF Dumper
 
-<p align="center"><img src="./preview.gif" alt="Preview" width=600px/></p>
+<p align="center"><img src="https://raw.githubusercontent.com/LightDestory/NIF-Dumper/master/.github/assets/preview.gif" alt="Preview" width=600px/></p>
 
 A simple Python CLI tool to search and download NIF (Naruto Italian Forum) releases.
 
@@ -11,20 +11,28 @@ If you like NIF releases, support the team!
 __This project is in no way affiliated with, supported or offered by NIF Team__
 
 
-## Usage
+## Install and Usage
 
-0) Make sure to have Python 3.7+ and aria2 installed on your system;
-   1) Create a folder anywhere on your pc and clone the repository there:
+__Make sure to have Python 3.7+ and aria2 installed on your system.__
 
-      `git clone https://github.com/LightDestory/NIF-Dumper`
+You can install this tool as a Python Module using pip
+or using the script directly. The dumper provide a wizard that will help you download the releases.
 
-   2) Install the requirements using pip:
+- If you want to install the tool as a Python Module:
+   - Install the module using pip: `pip install nif-dumper`
+   - You can run the tool using: `nif-dumper`
+- If you want to use the script directly:
+  - Clone the repository anywhere on your pc:
+  
+     `git clone https://github.com/LightDestory/NIF-Dumper`
 
-      `pip install -r requirements.txt`
+  - Install the requirements using pip:
 
-   3) Execute the dumber and follow the wizard to start downloading:
+     `pip install .`
 
-      `python ./dumper.py`
+  - Run the dumper:
+
+     `python ./src/nif_dumper/dumper.py`
 
 ## Support
 
@@ -33,6 +41,6 @@ __This project is in no way affiliated with, supported or offered by NIF Team__
             src="https://img.shields.io/badge/-Support me with coindrop.to-yellowgreen?style=for-the-badge&logo=paypal&logoColor=white" /></a>
 </p>
 
-## :warning: License
+## ⚠️ License
 
 This collection is under GNU GPL-3.0 License.

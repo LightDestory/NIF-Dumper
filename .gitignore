@@ -1,3 +1,6 @@
 .idea/
 .vscode/
 venv/
+dist/
+src/nif_dumper.egg-info
+src/nif_dumper/__pycache__/

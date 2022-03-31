@@ -1,16 +1,18 @@
+import os
 import re
 import shutil
-import os
-import requests
 from typing import Union
+
+import requests
+from InquirerPy import inquirer
 from InquirerPy.base import Choice
 from InquirerPy.validator import EmptyInputValidator
 from bs4 import BeautifulSoup
-from InquirerPy import inquirer
 from colorama import init
 from requests import Response
 from termcolor import colored
 
+VERSION = "1.0.0"
 NIF_SCRAPE_TEMPLATE: str = "https://nifteam.info/Multimedia/?Anime=%key%"
 NIF_DL_TEMPLATE: str = "https://download.nifteam.info/Download/Anime/%episode%"
 NIF_HOME_KEY: str = "Homepage"
