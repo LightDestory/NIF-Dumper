@@ -40,7 +40,7 @@ def a_to_dict(soup: BeautifulSoup, regex: str) -> dict[str, str]:
 
 def get_series(soup: BeautifulSoup) -> [dict[str, str]]:
     in_progress: dict[str, str] = {}
-    in_progress_div = soup.find("div", attrs={'id': "listarow"})
+    in_progress_div = soup.find("div", attrs={'id': "titoloepisodio"}).find_next('div')
     for a_element in in_progress_div.find_all("a", attrs={'href': re.compile(SERIES_REGEX)}):
         name: str = a_element.find("img")['alt']
         anime_path: str = a_element['href'].split("=")[1]
