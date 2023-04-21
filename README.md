@@ -81,9 +81,9 @@ or executing the script directly.
 
     - Install the requirements using `pip` (create a `venv` if you want):
 
-      `pip install .`
+      `pip install -r requirements.txt`
 
-    - Run the dumper:
+    - Run directly from source:
 
       `python ./src/nif_dumper/dumper.py`
 
